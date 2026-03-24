@@ -3,72 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE SENTINEL | Jarvis OS</title>
+    <title>SENTINEL // WORLD MONITOR</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @keyframes pulse-glow { 0% { box-shadow: 0 0 5px #06b6d4; } 50% { box-shadow: 0 0 20px #06b6d4; } 100% { box-shadow: 0 0 5px #06b6d4; } }
-        .jarvis-glow { animation: pulse-glow 3s infinite; }
-        .glass { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(6, 182, 212, 0.3); }
-        iframe { filter: brightness(0.8) contrast(1.2) hue-rotate(-5deg); transition: all 0.5s ease; }
+        :root { --jarvis-cyan: #06b6d4; --monitor-bg: #0a0a0a; }
+        body { background-color: var(--monitor-bg); color: var(--jarvis-cyan); font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        .grid-lines { background-image: linear-gradient(rgba(6,182,212,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.05) 1px, transparent 1px); background-size: 30px 30px; }
+        .sidebar { background: rgba(0,0,0,0.85); border-right: 1px solid rgba(6,182,212,0.3); transition: all 0.3s ease; }
+        iframe { width: 100%; height: 100%; border: none; background: #000; pointer-events: auto !important; }
+        .ticker-wrap { background: rgba(6,182,212,0.1); border-top: 1px solid var(--jarvis-cyan); }
+        @keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .ticker-move { display: inline-block; white-space: nowrap; animation: scroll 30s linear infinite; }
     </style>
 </head>
-<body class="bg-black text-cyan-400 font-mono overflow-hidden h-screen flex flex-col">
+<body class="h-screen w-screen flex flex-col grid-lines">
 
-    <header class="h-16 flex items-center justify-between px-6 glass z-50 border-b border-cyan-500/50">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
-            <h1 class="text-sm font-black tracking-[0.2em] uppercase">Sentinel // OSINT.v3</h1>
+    <header class="h-12 flex items-center justify-between px-4 border-b border-cyan-500/50 bg-black z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
+            <h1 class="text-xs font-bold tracking-tighter">SENTINEL_v3.1 // LIVE_OPERATIONS</h1>
         </div>
-        
         <select id="layerSelect" onchange="changeLayer(this.value)" 
-            class="bg-black border border-cyan-500/50 text-cyan-400 text-[10px] p-2 rounded focus:outline-none focus:ring-1 ring-cyan-500">
-            <option value="AIRSPACE">✈️ AIRSPACE MOVEMENT</option>
-            <option value="MARITIME">🚢 MARITIME TRACKING</option>
-            <option value="STREET">👁️ ATHENS STREET CAMS</option>
-            <option value="SATELLITE">🛰️ ORBITAL TRACKER</option>
-            <option value="HAZARD">🔥 NASA FIRE MONITOR</option>
+            class="bg-black border border-cyan-500 text-[10px] p-1 rounded text-cyan-400 outline-none uppercase">
+            <option value="AIRSPACE">✈️ Airspace (RadarBox)</option>
+            <option value="MARITIME">🚢 Maritime (MarineTraffic)</option>
+            <option value="STREET">👁️ Athens/Global Cams</option>
+            <option value="ORBITAL">🛰️ Satellite Tracker</option>
+            <option value="HAZARD">🔥 NASA Fire Monitor</option>
         </select>
     </header>
 
-    <main class="flex-grow relative bg-neutral-900">
-        <div id="loading" class="absolute inset-0 flex items-center justify-center bg-black z-40 transition-opacity duration-500">
-            <p class="animate-pulse tracking-widest text-xs">INITIATING SECURE LINK...</p>
-        </div>
-        <iframe id="viewport" src="https://globe.adsbexchange.com/" class="w-full h-full border-none" allow="geolocation"></iframe>
-    </main>
+    <div class="flex flex-grow overflow-hidden">
+        <aside id="sidebar" class="w-0 md:w-64 sidebar overflow-y-auto flex-shrink-0 flex flex-col">
+            <div class="p-4 border-b border-cyan-500/20 text-[10px] font-bold">LIVE_INTEL_FEED</div>
+            <div id="news-container" class="p-2 space-y-4 text-[9px]">
+                <div class="border-l-2 border-yellow-500 p-2 bg-yellow-500/5">
+                    <p class="opacity-50">[SYSTEM_ALERT]</p>
+                    <p>RE-CALIBRATING GLOBAL SENSORS...</p>
+                </div>
+            </div>
+        </aside>
 
-    <footer class="h-8 glass flex items-center justify-between px-4 text-[9px] uppercase tracking-tighter opacity-70">
-        <div>System: Online</div>
-        <div id="status">Target: Global Airspace</div>
-        <div id="coords">37.9838° N, 23.7275° E</div>
-    </footer>
+        <main class="flex-grow relative overflow-hidden">
+            <div id="loading" class="absolute inset-0 flex items-center justify-center bg-black z-40">
+                <div class="text-center">
+                    <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p class="text-[10px] tracking-[0.3em]">ESTABLISHING SECURE CONNECTION...</p>
+                </div>
+            </div>
+            <iframe id="viewport" 
+                src="https://www.radarbox.com/@37.9838,23.7275,z10" 
+                allow="geolocation; fullscreen"
+                loading="lazy">
+            </iframe>
+        </main>
+    </div>
+
+    <div class="h-6 ticker-wrap overflow-hidden flex items-center">
+        <div class="ticker-move text-[10px] uppercase font-bold text-cyan-300">
+            [INTEL] SECURING ATHENS SECTOR... [GLOBAL] SATELLITE TELEMETRY SYNCED... [AIRSPACE] ELEFTHERIOS VENIZELOS TRAFFIC NORMAL... [MARITIME] PIRAEUS PORT ACTIVE... [WARNING] DATA OVERLAY IS LIVE...
+        </div>
+    </div>
 
     <script>
         const layers = {
-            AIRSPACE: { url: "https://globe.adsbexchange.com/", label: "Target: Global Airspace" },
-            MARITIME: { url: "https://www.vesselfinder.com/aismap?zoom=10&lat=37.9&lon=23.7", label: "Target: Maritime AIS" },
-            STREET: { url: "https://embed.skylinewebcams.com/en/webcam/ellada/atiki/athina.html", label: "Target: Athens Feed" },
-            SATELLITE: { url: "https://www.n2yo.com/?s=25544&live=1", label: "Target: Orbital Telemetry" },
-            HAZARD: { url: "https://firms.modaps.eosdis.nasa.gov/map/", label: "Target: NASA FIRMS" }
+            AIRSPACE: { 
+                url: "https://www.radarbox.com/@37.9838,23.7275,z10", 
+                msg: "Tracking Air Traffic..." 
+            },
+            MARITIME: { 
+                url: "https://www.vesselfinder.com/aismap?zoom=10&lat=37.9&lon=23.7", 
+                msg: "Tracking Vessels..." 
+            },
+            STREET: { 
+                url: "https://www.skylinewebcams.com/en/webcam/ellada/atiki/athina.html", 
+                msg: "Athens Public Feed..." 
+            },
+            ORBITAL: { 
+                url: "https://www.heavens-above.com/SkyChart.aspx", 
+                msg: "Scanning Low Orbit..." 
+            },
+            HAZARD: { 
+                url: "https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@23.7,38.0,8.5z", 
+                msg: "Scanning Thermal Anomalies..." 
+            }
         };
 
         function changeLayer(key) {
             const loader = document.getElementById('loading');
             const frame = document.getElementById('viewport');
-            const status = document.getElementById('status');
             
-            loader.style.opacity = '1';
+            loader.style.display = 'flex';
             frame.src = layers[key].url;
-            status.innerText = layers[key].label;
 
             frame.onload = () => {
-                setTimeout(() => loader.style.opacity = '0', 500);
+                setTimeout(() => loader.style.display = 'none', 1000);
             };
         }
 
-        // Register PWA Service Worker
+        // Simple Live News Simulator (Since true APIs cost money)
+        const newsItems = [
+            "GLOBAL TRAFFIC FLOW INCREASING IN SOUTHERN EUROPE",
+            "SATELLITE 14B PASSING OVER ATHENS SECTOR",
+            "WEATHER ANOMALY DETECTED IN CYCLADES REGION",
+            "MARITIME LOGISTICS NORMAL IN PIRAEUS"
+        ];
+
+        function addNews() {
+            const container = document.getElementById('news-container');
+            const time = new Date().toLocaleTimeString();
+            const item = newsItems[Math.floor(Math.random() * newsItems.length)];
+            const div = document.createElement('div');
+            div.className = "border-l-2 border-cyan-500 p-2 bg-cyan-500/5 mb-2";
+            div.innerHTML = `<p class="opacity-50">[${time}]</p><p>${item}</p>`;
+            container.prepend(div);
+        }
+
+        setInterval(addNews, 10000); // New intel every 10 seconds
+        
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
