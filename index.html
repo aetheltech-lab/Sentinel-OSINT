@@ -9,24 +9,26 @@
     <style>
         :root { --jarvis-cyan: #06b6d4; --bg-black: #050505; }
         body { background: var(--bg-black); color: var(--jarvis-cyan); font-family: 'Courier New', monospace; overflow: hidden; }
-        .glass { background: rgba(0,0,0,0.9); border: 1px solid rgba(6,182,212,0.4); backdrop-filter: blur(10px); }
+        .glass { background: rgba(0,0,0,0.95); border: 1px solid rgba(6,182,212,0.4); backdrop-filter: blur(15px); }
         .grid-bg { background-image: radial-gradient(rgba(6,182,212,0.1) 1px, transparent 0); background-size: 20px 20px; }
-        iframe { border: none; width: 100%; height: 100%; pointer-events: auto; }
-        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.8); }
+        iframe { border: none; width: 100%; height: 100%; pointer-events: auto; background: #000; }
+        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.85); }
+        .btn-tac { border: 1px solid rgba(6,182,212,0.4); background: rgba(6,182,212,0.05); padding: 8px; font-size: 9px; transition: 0.3s; text-align: left; }
+        .btn-tac:hover { background: rgba(6,182,212,0.2); border-color: var(--jarvis-cyan); color: white; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col grid-bg">
 
     <header class="h-12 flex items-center justify-between px-4 border-b border-cyan-500/50 bg-black z-50">
         <div class="flex items-center gap-3">
-            <div class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
-            <h1 class="text-[10px] font-black tracking-widest uppercase">Sentinel // Ops_Center</h1>
+            <div class="w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]"></div>
+            <h1 class="text-[10px] font-black tracking-widest uppercase text-white">Sentinel // Ops_Center</h1>
         </div>
         
         <div class="flex gap-2">
-            <button onclick="openModal('news')" class="text-[9px] border border-cyan-500/50 px-2 py-1 hover:bg-cyan-500/20">LIVE_NEWS</button>
-            <button onclick="openModal('cams')" class="text-[9px] border border-cyan-500/50 px-2 py-1 hover:bg-cyan-500/20">TACTICAL_CAMS</button>
-            <select id="layerSelect" onchange="changeLayer(this.value)" class="bg-black border border-cyan-500 text-[9px] p-1 rounded">
+            <button onclick="openModal('news')" class="text-[9px] border border-cyan-500/50 px-2 py-1 hover:bg-cyan-500/20 uppercase font-bold">Live News</button>
+            <button onclick="openModal('cams')" class="text-[9px] border border-cyan-500/50 px-2 py-1 hover:bg-cyan-500/20 uppercase font-bold">Tactical Cams</button>
+            <select id="layerSelect" onchange="changeLayer(this.value)" class="bg-black border border-cyan-500 text-[9px] p-1 rounded text-cyan-400">
                 <option value="AIRSPACE">✈️ AIRSPACE (LIVE)</option>
                 <option value="MARITIME">🚢 MARITIME (LIVE)</option>
                 <option value="SATELLITE">🛰️ SATELLITE TRACKER</option>
@@ -36,68 +38,59 @@
     </header>
 
     <div class="flex flex-grow overflow-hidden">
-        <aside class="w-0 md:w-64 border-right border-cyan-500/30 bg-black/80 p-2 overflow-y-auto hidden md:block">
-            <h2 class="text-[10px] font-bold border-b border-cyan-500/20 mb-2">GLOBAL_RSS_INTEL</h2>
-            <div id="rss-feed" class="space-y-3">
-                <div class="text-[9px] opacity-70 border-l border-cyan-500 pl-2">
-                    <p class="font-bold text-white">BLOOMBERG</p>
-                    <p>Global markets respond to tech surge...</p>
-                </div>
-                <div class="text-[9px] opacity-70 border-l border-cyan-500 pl-2">
-                    <p class="font-bold text-white">SKY NEWS</p>
-                    <p>Security protocols tightened in Mediterranean...</p>
-                </div>
-            </div>
-        </aside>
-
         <main class="flex-grow relative">
-            <div id="loader" class="absolute inset-0 bg-black flex items-center justify-center z-40">
-                <p class="animate-pulse text-xs">SYNCHRONIZING TELEMETRY...</p>
+            <div id="loader" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-40">
+                <div class="w-12 h-12 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                <p class="animate-pulse text-[9px] tracking-widest">ESTABLISHING SECURE DATA LINK...</p>
             </div>
-            <iframe id="mainView" src="https://opensky-network.org/network/explorer"></iframe>
+            <iframe id="mainView" src="https://www.radarbox.com/@37.9838,23.7275,z10"></iframe>
         </main>
     </div>
 
     <div id="tacticalModal" class="modal items-center justify-center p-4">
-        <div class="glass w-full max-w-4xl aspect-video relative flex flex-col">
-            <div class="h-10 border-b border-cyan-500/50 flex items-center justify-between px-4">
-                <span id="modalTitle" class="text-[10px] font-bold">TACTICAL_OVERLAY</span>
-                <button onclick="closeModal()" class="text-red-500 text-lg">&times;</button>
+        <div class="glass w-full max-w-5xl aspect-video relative flex flex-col shadow-[0_0_50px_rgba(0,0,0,1)]">
+            <div class="h-10 border-b border-cyan-500/50 flex items-center justify-between px-4 bg-black/50">
+                <span id="modalTitle" class="text-[10px] font-bold tracking-widest uppercase">TACTICAL_OVERLAY</span>
+                <button onclick="closeModal()" class="text-cyan-500 text-2xl hover:text-red-500 transition-colors">×</button>
             </div>
-            <div id="modalContent" class="flex-grow flex p-4 gap-4">
+            <div id="modalContent" class="flex-grow flex p-2 gap-2 bg-black">
                 </div>
         </div>
     </div>
 
     <script>
         const layers = {
-            AIRSPACE: "https://opensky-network.org/network/explorer",
+            AIRSPACE: "https://www.radarbox.com/@37.9838,23.7275,z10",
             MARITIME: "https://www.vesselfinder.com/aismap?zoom=10&lat=37.9&lon=23.7",
-            SATELLITE: "https://www.n2yo.com/widgets/widget-tracker.php?s=25544&size=large&all=1",
+            SATELLITE: "https://www.n2yo.com/?s=25544&live=1",
             FIRE: "https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@23.7,38.0,8z"
         };
 
         const liveNews = {
-            "Sky News": "9Auq9mYxFEE",
-            "Euronews": "pykpO699K_s",
-            "DW News": "G_v4Z6TzFio",
-            "Al Jazeera": "bNyUyrR0PHo",
-            "France24": "h3MuIUNMwzI",
-            "CNBC": "2X_pX9I0Yv4"
+            "Bloomberg": "iEpJwprxDdk",
+            "Sky News": "YDvsBbKfLPA",
+            "Euronews": "pykpO5kQJ98",
+            "DW News": "LuKwFajn37U",
+            "CNBC": "9NyxcX3rhQs",
+            "France24": "Ap-UM1O9RBU",
+            "Al Jazeera": "gCNeDWCI0vo"
         };
 
         const liveCams = {
-            "Athens Center": "1-iS7LArMPA",
-            "Tel Aviv": "r8vX_G0fHjU",
-            "Washington DC": "3v6p1p7oN-s",
-            "London Sky": "pykpO699K_s"
+            "Athens Center": "L6oSjYPcrMQ",
+            "Tel Aviv Skyline": "KMZbvDRgAh8",
+            "White House (DC)": "Fu8vYoIkaeM",
+            "Washington Axis": "1wV9lLe14aU",
+            "Monastiraki (Athens)": "62Fm7lTH9o4"
         };
 
         function changeLayer(val) {
             document.getElementById('loader').style.display = 'flex';
             const frame = document.getElementById('mainView');
             frame.src = layers[val];
-            frame.onload = () => document.getElementById('loader').style.display = 'none';
+            frame.onload = () => {
+                setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
+            };
         }
 
         function openModal(type) {
@@ -108,16 +101,15 @@
             content.innerHTML = '';
             
             const dataSet = type === 'news' ? liveNews : liveCams;
-            title.innerText = type === 'news' ? 'LIVE_GLOBAL_NEWS' : 'TACTICAL_CITY_CAMS';
+            title.innerText = type === 'news' ? 'LIVE GLOBAL NEWS FEEDS' : 'TACTICAL CITY SURVEILLANCE';
 
-            // Create selection grid
             const grid = document.createElement('div');
-            grid.className = "grid grid-cols-2 md:grid-cols-3 gap-2 w-full";
+            grid.className = "grid grid-cols-2 md:grid-cols-4 gap-2 w-full p-2";
             
             Object.entries(dataSet).forEach(([name, id]) => {
                 const btn = document.createElement('button');
-                btn.className = "border border-cyan-500/30 p-4 text-[10px] hover:bg-cyan-500/20";
-                btn.innerText = name;
+                btn.className = "btn-tac";
+                btn.innerHTML = `<span class="opacity-50 block mb-1">Source:</span> <span class="font-bold">${name}</span>`;
                 btn.onclick = () => loadVideo(id);
                 grid.appendChild(btn);
             });
@@ -126,14 +118,25 @@
 
         function loadVideo(id) {
             const content = document.getElementById('modalContent');
-            content.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" allow="autoplay; encrypted-media; fullscreen"></iframe>`;
+            // Using muted=1 and autoplay=1 for instant loading in PWA mode
+            content.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=0&controls=1&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" class="w-full h-full"></iframe>`;
+            
+            // Add a Back Button to return to selection
+            const backBtn = document.createElement('button');
+            backBtn.innerText = "BACK TO SELECTION";
+            backBtn.className = "absolute bottom-4 right-4 bg-cyan-950/80 border border-cyan-500 text-[9px] px-3 py-1 hover:bg-cyan-500 hover:text-black transition-all";
+            backBtn.onclick = () => {
+                const type = document.getElementById('modalTitle').innerText.includes('NEWS') ? 'news' : 'cams';
+                openModal(type);
+            };
+            content.appendChild(backBtn);
         }
 
         function closeModal() {
             document.getElementById('tacticalModal').style.display = 'none';
+            document.getElementById('modalContent').innerHTML = '';
         }
 
-        // Close modal on click outside
         window.onclick = function(event) {
             if (event.target == document.getElementById('tacticalModal')) closeModal();
         }
