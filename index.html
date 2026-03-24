@@ -3,127 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SENTINEL // WORLD MONITOR</title>
+    <title>SENTINEL // TACTICAL COMMAND</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --jarvis-cyan: #06b6d4; --monitor-bg: #0a0a0a; }
-        body { background-color: var(--monitor-bg); color: var(--jarvis-cyan); font-family: 'Courier New', Courier, monospace; overflow: hidden; }
-        .grid-lines { background-image: linear-gradient(rgba(6,182,212,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.05) 1px, transparent 1px); background-size: 30px 30px; }
-        .sidebar { background: rgba(0,0,0,0.85); border-right: 1px solid rgba(6,182,212,0.3); transition: all 0.3s ease; }
-        iframe { width: 100%; height: 100%; border: none; background: #000; pointer-events: auto !important; }
-        .ticker-wrap { background: rgba(6,182,212,0.1); border-top: 1px solid var(--jarvis-cyan); }
-        @keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .ticker-move { display: inline-block; white-space: nowrap; animation: scroll 30s linear infinite; }
+        :root { --jarvis-cyan: #06b6d4; --bg-black: #050505; }
+        body { background: var(--bg-black); color: var(--jarvis-cyan); font-family: 'Courier New', monospace; overflow: hidden; }
+        .glass { background: rgba(0,0,0,0.9); border: 1px solid rgba(6,182,212,0.4); backdrop-filter: blur(10px); }
+        .grid-bg { background-image: radial-gradient(rgba(6,182,212,0.1) 1px, transparent 0); background-size: 20px 20px; }
+        iframe { border: none; width: 100%; height: 100%; pointer-events: auto; }
+        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.8); }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col grid-lines">
+<body class="h-screen w-screen flex flex-col grid-bg">
 
     <header class="h-12 flex items-center justify-between px-4 border-b border-cyan-500/50 bg-black z-50">
-        <div class="flex items-center gap-2">
-            <div class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
-            <h1 class="text-xs font-bold tracking-tighter">SENTINEL_v3.1 // LIVE_OPERATIONS</h1>
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
+            <h1 class="text-[10px] font-black tracking-widest uppercase">Sentinel // Ops_Center</h1>
         </div>
-        <select id="layerSelect" onchange="changeLayer(this.value)" 
-            class="bg-black border border-cyan-500 text-[10px] p-1 rounded text-cyan-400 outline-none uppercase">
-            <option value="AIRSPACE">✈️ Airspace (RadarBox)</option>
-            <option value="MARITIME">🚢 Maritime (MarineTraffic)</option>
-            <option value="STREET">👁️ Athens/Global Cams</option>
-            <option value="ORBITAL">🛰️ Satellite Tracker</option>
-            <option value="HAZARD">🔥 NASA Fire Monitor</option>
-        </select>
+        
+        <div class="flex gap-2">
+            <button onclick="openModal('news')" class="text-[9px] border border-cyan-500/50 px-2 py-1 hover:bg-cyan-500/20">LIVE_NEWS</button>
+            <button onclick="openModal('cams')" class="text-[9px] border border-cyan-500/50 px-2 py-1 hover:bg-cyan-500/20">TACTICAL_CAMS</button>
+            <select id="layerSelect" onchange="changeLayer(this.value)" class="bg-black border border-cyan-500 text-[9px] p-1 rounded">
+                <option value="AIRSPACE">✈️ AIRSPACE (LIVE)</option>
+                <option value="MARITIME">🚢 MARITIME (LIVE)</option>
+                <option value="SATELLITE">🛰️ SATELLITE TRACKER</option>
+                <option value="FIRE">🔥 NASA THERMAL</option>
+            </select>
+        </div>
     </header>
 
     <div class="flex flex-grow overflow-hidden">
-        <aside id="sidebar" class="w-0 md:w-64 sidebar overflow-y-auto flex-shrink-0 flex flex-col">
-            <div class="p-4 border-b border-cyan-500/20 text-[10px] font-bold">LIVE_INTEL_FEED</div>
-            <div id="news-container" class="p-2 space-y-4 text-[9px]">
-                <div class="border-l-2 border-yellow-500 p-2 bg-yellow-500/5">
-                    <p class="opacity-50">[SYSTEM_ALERT]</p>
-                    <p>RE-CALIBRATING GLOBAL SENSORS...</p>
+        <aside class="w-0 md:w-64 border-right border-cyan-500/30 bg-black/80 p-2 overflow-y-auto hidden md:block">
+            <h2 class="text-[10px] font-bold border-b border-cyan-500/20 mb-2">GLOBAL_RSS_INTEL</h2>
+            <div id="rss-feed" class="space-y-3">
+                <div class="text-[9px] opacity-70 border-l border-cyan-500 pl-2">
+                    <p class="font-bold text-white">BLOOMBERG</p>
+                    <p>Global markets respond to tech surge...</p>
+                </div>
+                <div class="text-[9px] opacity-70 border-l border-cyan-500 pl-2">
+                    <p class="font-bold text-white">SKY NEWS</p>
+                    <p>Security protocols tightened in Mediterranean...</p>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-grow relative overflow-hidden">
-            <div id="loading" class="absolute inset-0 flex items-center justify-center bg-black z-40">
-                <div class="text-center">
-                    <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p class="text-[10px] tracking-[0.3em]">ESTABLISHING SECURE CONNECTION...</p>
-                </div>
+        <main class="flex-grow relative">
+            <div id="loader" class="absolute inset-0 bg-black flex items-center justify-center z-40">
+                <p class="animate-pulse text-xs">SYNCHRONIZING TELEMETRY...</p>
             </div>
-            <iframe id="viewport" 
-                src="https://www.radarbox.com/@37.9838,23.7275,z10" 
-                allow="geolocation; fullscreen"
-                loading="lazy">
-            </iframe>
+            <iframe id="mainView" src="https://opensky-network.org/network/explorer"></iframe>
         </main>
     </div>
 
-    <div class="h-6 ticker-wrap overflow-hidden flex items-center">
-        <div class="ticker-move text-[10px] uppercase font-bold text-cyan-300">
-            [INTEL] SECURING ATHENS SECTOR... [GLOBAL] SATELLITE TELEMETRY SYNCED... [AIRSPACE] ELEFTHERIOS VENIZELOS TRAFFIC NORMAL... [MARITIME] PIRAEUS PORT ACTIVE... [WARNING] DATA OVERLAY IS LIVE...
+    <div id="tacticalModal" class="modal items-center justify-center p-4">
+        <div class="glass w-full max-w-4xl aspect-video relative flex flex-col">
+            <div class="h-10 border-b border-cyan-500/50 flex items-center justify-between px-4">
+                <span id="modalTitle" class="text-[10px] font-bold">TACTICAL_OVERLAY</span>
+                <button onclick="closeModal()" class="text-red-500 text-lg">&times;</button>
+            </div>
+            <div id="modalContent" class="flex-grow flex p-4 gap-4">
+                </div>
         </div>
     </div>
 
     <script>
         const layers = {
-            AIRSPACE: { 
-                url: "https://www.radarbox.com/@37.9838,23.7275,z10", 
-                msg: "Tracking Air Traffic..." 
-            },
-            MARITIME: { 
-                url: "https://www.vesselfinder.com/aismap?zoom=10&lat=37.9&lon=23.7", 
-                msg: "Tracking Vessels..." 
-            },
-            STREET: { 
-                url: "https://www.skylinewebcams.com/en/webcam/ellada/atiki/athina.html", 
-                msg: "Athens Public Feed..." 
-            },
-            ORBITAL: { 
-                url: "https://www.heavens-above.com/SkyChart.aspx", 
-                msg: "Scanning Low Orbit..." 
-            },
-            HAZARD: { 
-                url: "https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@23.7,38.0,8.5z", 
-                msg: "Scanning Thermal Anomalies..." 
-            }
+            AIRSPACE: "https://opensky-network.org/network/explorer",
+            MARITIME: "https://www.vesselfinder.com/aismap?zoom=10&lat=37.9&lon=23.7",
+            SATELLITE: "https://www.n2yo.com/widgets/widget-tracker.php?s=25544&size=large&all=1",
+            FIRE: "https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@23.7,38.0,8z"
         };
 
-        function changeLayer(key) {
-            const loader = document.getElementById('loading');
-            const frame = document.getElementById('viewport');
+        const liveNews = {
+            "Sky News": "9Auq9mYxFEE",
+            "Euronews": "pykpO699K_s",
+            "DW News": "G_v4Z6TzFio",
+            "Al Jazeera": "bNyUyrR0PHo",
+            "France24": "h3MuIUNMwzI",
+            "CNBC": "2X_pX9I0Yv4"
+        };
+
+        const liveCams = {
+            "Athens Center": "1-iS7LArMPA",
+            "Tel Aviv": "r8vX_G0fHjU",
+            "Washington DC": "3v6p1p7oN-s",
+            "London Sky": "pykpO699K_s"
+        };
+
+        function changeLayer(val) {
+            document.getElementById('loader').style.display = 'flex';
+            const frame = document.getElementById('mainView');
+            frame.src = layers[val];
+            frame.onload = () => document.getElementById('loader').style.display = 'none';
+        }
+
+        function openModal(type) {
+            const modal = document.getElementById('tacticalModal');
+            const content = document.getElementById('modalContent');
+            const title = document.getElementById('modalTitle');
+            modal.style.display = 'flex';
+            content.innerHTML = '';
             
-            loader.style.display = 'flex';
-            frame.src = layers[key].url;
+            const dataSet = type === 'news' ? liveNews : liveCams;
+            title.innerText = type === 'news' ? 'LIVE_GLOBAL_NEWS' : 'TACTICAL_CITY_CAMS';
 
-            frame.onload = () => {
-                setTimeout(() => loader.style.display = 'none', 1000);
-            };
+            // Create selection grid
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-2 md:grid-cols-3 gap-2 w-full";
+            
+            Object.entries(dataSet).forEach(([name, id]) => {
+                const btn = document.createElement('button');
+                btn.className = "border border-cyan-500/30 p-4 text-[10px] hover:bg-cyan-500/20";
+                btn.innerText = name;
+                btn.onclick = () => loadVideo(id);
+                grid.appendChild(btn);
+            });
+            content.appendChild(grid);
         }
 
-        // Simple Live News Simulator (Since true APIs cost money)
-        const newsItems = [
-            "GLOBAL TRAFFIC FLOW INCREASING IN SOUTHERN EUROPE",
-            "SATELLITE 14B PASSING OVER ATHENS SECTOR",
-            "WEATHER ANOMALY DETECTED IN CYCLADES REGION",
-            "MARITIME LOGISTICS NORMAL IN PIRAEUS"
-        ];
-
-        function addNews() {
-            const container = document.getElementById('news-container');
-            const time = new Date().toLocaleTimeString();
-            const item = newsItems[Math.floor(Math.random() * newsItems.length)];
-            const div = document.createElement('div');
-            div.className = "border-l-2 border-cyan-500 p-2 bg-cyan-500/5 mb-2";
-            div.innerHTML = `<p class="opacity-50">[${time}]</p><p>${item}</p>`;
-            container.prepend(div);
+        function loadVideo(id) {
+            const content = document.getElementById('modalContent');
+            content.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" allow="autoplay; encrypted-media; fullscreen"></iframe>`;
         }
 
-        setInterval(addNews, 10000); // New intel every 10 seconds
-        
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+        function closeModal() {
+            document.getElementById('tacticalModal').style.display = 'none';
+        }
+
+        // Close modal on click outside
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('tacticalModal')) closeModal();
         }
     </script>
 </body>
