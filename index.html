@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE SENTINEL | Jarvis OS</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 5px #06b6d4; } 50% { box-shadow: 0 0 20px #06b6d4; } 100% { box-shadow: 0 0 5px #06b6d4; } }
+        .jarvis-glow { animation: pulse-glow 3s infinite; }
+        .glass { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(6, 182, 212, 0.3); }
+        iframe { filter: brightness(0.8) contrast(1.2) hue-rotate(-5deg); transition: all 0.5s ease; }
+    </style>
+</head>
+<body class="bg-black text-cyan-400 font-mono overflow-hidden h-screen flex flex-col">
+
+    <header class="h-16 flex items-center justify-between px-6 glass z-50 border-b border-cyan-500/50">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
+            <h1 class="text-sm font-black tracking-[0.2em] uppercase">Sentinel // OSINT.v3</h1>
+        </div>
+        
+        <select id="layerSelect" onchange="changeLayer(this.value)" 
+            class="bg-black border border-cyan-500/50 text-cyan-400 text-[10px] p-2 rounded focus:outline-none focus:ring-1 ring-cyan-500">
+            <option value="AIRSPACE">✈️ AIRSPACE MOVEMENT</option>
+            <option value="MARITIME">🚢 MARITIME TRACKING</option>
+            <option value="STREET">👁️ ATHENS STREET CAMS</option>
+            <option value="SATELLITE">🛰️ ORBITAL TRACKER</option>
+            <option value="HAZARD">🔥 NASA FIRE MONITOR</option>
+        </select>
+    </header>
+
+    <main class="flex-grow relative bg-neutral-900">
+        <div id="loading" class="absolute inset-0 flex items-center justify-center bg-black z-40 transition-opacity duration-500">
+            <p class="animate-pulse tracking-widest text-xs">INITIATING SECURE LINK...</p>
+        </div>
+        <iframe id="viewport" src="https://globe.adsbexchange.com/" class="w-full h-full border-none" allow="geolocation"></iframe>
+    </main>
+
+    <footer class="h-8 glass flex items-center justify-between px-4 text-[9px] uppercase tracking-tighter opacity-70">
+        <div>System: Online</div>
+        <div id="status">Target: Global Airspace</div>
+        <div id="coords">37.9838° N, 23.7275° E</div>
+    </footer>
+
+    <script>
+        const layers = {
+            AIRSPACE: { url: "https://globe.adsbexchange.com/", label: "Target: Global Airspace" },
+            MARITIME: { url: "https://www.vesselfinder.com/aismap?zoom=10&lat=37.9&lon=23.7", label: "Target: Maritime AIS" },
+            STREET: { url: "https://embed.skylinewebcams.com/en/webcam/ellada/atiki/athina.html", label: "Target: Athens Feed" },
+            SATELLITE: { url: "https://www.n2yo.com/?s=25544&live=1", label: "Target: Orbital Telemetry" },
+            HAZARD: { url: "https://firms.modaps.eosdis.nasa.gov/map/", label: "Target: NASA FIRMS" }
+        };
+
+        function changeLayer(key) {
+            const loader = document.getElementById('loading');
+            const frame = document.getElementById('viewport');
+            const status = document.getElementById('status');
+            
+            loader.style.opacity = '1';
+            frame.src = layers[key].url;
+            status.innerText = layers[key].label;
+
+            frame.onload = () => {
+                setTimeout(() => loader.style.opacity = '0', 500);
+            };
+        }
+
+        // Register PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
