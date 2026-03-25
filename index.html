@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SENTINEL // WORLD MONITOR</title>
+    <title>SENTINEL // ORBITAL COMMAND</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -22,17 +22,17 @@
 
     <header class="h-14 flex items-center justify-between px-6 border-b border-cyan-500/40 bg-black z-50">
         <div class="flex items-center gap-4">
-            <div class="status-dot bg-red-600 animate-pulse"></div>
-            <h1 class="text-xs font-black tracking-[0.3em] uppercase text-white">Sentinel_v3.4 // Global_Monitor</h1>
+            <div class="status-dot bg-red-600 animate-pulse shadow-[0_0_10px_red]"></div>
+            <h1 class="text-[10px] font-black tracking-[0.3em] uppercase text-white">Sentinel_v3.5 // Orbital_Ops</h1>
         </div>
         
         <div class="flex gap-3">
             <button onclick="openModal('news')" class="text-[9px] border border-cyan-500/50 px-3 py-1.5 hover:bg-cyan-500/20 uppercase font-black tracking-widest">Live_News</button>
             <button onclick="openModal('cams')" class="text-[9px] border border-cyan-500/50 px-3 py-1.5 hover:bg-cyan-500/20 uppercase font-black tracking-widest">City_Cams</button>
             <select id="layerSelect" onchange="changeLayer(this.value)" class="bg-black border border-cyan-500 text-[9px] px-2 py-1 rounded text-cyan-400 outline-none uppercase font-bold">
+                <option value="SATELLITE">🛰️ Starlink_Orbital</option>
                 <option value="AIRSPACE">✈️ Radar_Airspace</option>
                 <option value="MARITIME">🚢 Vessel_Traffic</option>
-                <option value="SATELLITE">🛰️ Orbital_Tracking</option>
                 <option value="FIRE">🔥 Thermal_Heatmap</option>
             </select>
         </div>
@@ -40,17 +40,17 @@
 
     <div class="flex flex-grow overflow-hidden relative">
         <aside class="w-16 flex flex-col items-center py-6 gap-8 border-r border-cyan-500/20 bg-black/80">
-            <div class="opacity-30 hover:opacity-100 transition-opacity cursor-crosshair">OSINT</div>
-            <div class="opacity-30 hover:opacity-100 transition-opacity cursor-crosshair rotate-90">ATHENS</div>
-            <div class="opacity-30 hover:opacity-100 transition-opacity cursor-crosshair">GRID</div>
+            <div class="opacity-30 hover:opacity-100 transition-opacity cursor-crosshair text-[8px] rotate-[-90deg]">STEL_ID</div>
+            <div class="opacity-30 hover:opacity-100 transition-opacity cursor-crosshair text-[8px] rotate-[-90deg]">OSINT</div>
+            <div class="opacity-30 hover:opacity-100 transition-opacity cursor-crosshair text-[8px] rotate-[-90deg]">TACTICAL</div>
         </aside>
 
         <main class="flex-grow relative overflow-hidden bg-black">
-            <div id="loader" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-40 transition-opacity duration-500">
+            <div id="loader" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-40 transition-opacity duration-500 pointer-events-none">
                 <div class="w-10 h-10 border border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p class="text-[8px] tracking-[0.5em] animate-pulse">UPLINKING_TO_SATELLITE...</p>
+                <p class="text-[8px] tracking-[0.5em] animate-pulse">UPLINKING_TO_SATELLITE_GRID...</p>
             </div>
-            <iframe id="mainView" src="https://www.radarbox.com/@37.9838,23.7275,z10" allow="geolocation"></iframe>
+            <iframe id="mainView" src="https://satellitemap.space/" allow="geolocation; fullscreen"></iframe>
         </main>
     </div>
 
@@ -63,16 +63,15 @@
                 </div>
                 <button onclick="closeModal()" class="text-cyan-500 text-3xl font-thin hover:text-white transition-colors">×</button>
             </div>
-            <div id="modalContent" class="flex-grow bg-black relative">
-                </div>
+            <div id="modalContent" class="flex-grow bg-black relative"></div>
         </div>
     </div>
 
     <script>
         const layers = {
+            SATELLITE: "https://satellitemap.space/",
             AIRSPACE: "https://www.radarbox.com/@37.9838,23.7275,z10",
             MARITIME: "https://www.vesselfinder.com/aismap?zoom=10&lat=37.9&lon=23.7",
-            SATELLITE: "https://www.n2yo.com/?s=25544&live=1",
             FIRE: "https://zoom.earth/maps/fire/#view=37.9,23.7,8z"
         };
 
@@ -101,7 +100,7 @@
             const frame = document.getElementById('mainView');
             loader.style.opacity = '1';
             frame.src = layers[val];
-            frame.onload = () => { setTimeout(() => { loader.style.opacity = '0'; }, 1000); };
+            frame.onload = () => { setTimeout(() => { loader.style.opacity = '0'; }, 1200); };
         }
 
         function openModal(type) {
@@ -120,7 +119,7 @@
             Object.entries(dataSet).forEach(([name, id]) => {
                 const btn = document.createElement('button');
                 btn.className = "btn-tac";
-                btn.innerHTML = `<span class="opacity-40 block mb-1 uppercase text-[8px]">Linked_Stream:</span> <span class="font-bold tracking-tight">${name}</span>`;
+                btn.innerHTML = `<span class="opacity-40 block mb-1 uppercase text-[8px]">Source:</span> <span class="font-bold tracking-tight">${name}</span>`;
                 btn.onclick = () => loadVideo(id);
                 grid.appendChild(btn);
             });
