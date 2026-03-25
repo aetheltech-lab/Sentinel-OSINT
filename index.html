@@ -3,21 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SENTINEL // STABILITY_PATCH</title>
+    <title>SENTINEL // 2D_TACTICAL</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="//unpkg.com/globe.gl" crossorigin="anonymous"></script>
     <style>
         :root { --jarvis-cyan: #06b6d4; --bg-black: #050505; }
         body { background: var(--bg-black); color: var(--jarvis-cyan); font-family: 'Courier New', monospace; overflow: hidden; }
-        #globeViz { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
-        .glass-ui { background: rgba(0,0,0,0.9); border: 1px solid rgba(6,182,212,0.3); backdrop-filter: blur(15px); }
-        .grid-matrix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px; background: #000; }
-        .video-box { position: relative; width: 100%; aspect-ratio: 16/9; border: 1px solid rgba(6,182,212,0.2); }
+        
+        /* MAP STYLING */
+        #mapView { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #000; }
+        .leaflet-container { background: #000 !important; }
+        
+        /* PULSING MARKER */
+        .pulsing-dot {
+            width: 10px; height: 10px;
+            background: #ff3e3e; border-radius: 50%;
+            box-shadow: 0 0 0 rgba(255, 62, 62, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 62, 62, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 62, 62, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 62, 62, 0); }
+        }
+
+        .glass-ui { background: rgba(0,0,0,0.92); border: 1px solid rgba(6,182,212,0.3); backdrop-filter: blur(15px); }
+        .grid-matrix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px; }
+        .video-box { position: relative; width: 100%; aspect-ratio: 16/9; border: 1px solid rgba(6,182,212,0.2); background: #000; }
         .video-box iframe { width: 100%; height: 100%; border: none; }
         .risk-bar { height: 4px; background: #111; overflow: hidden; }
         .risk-fill { height: 100%; background: var(--jarvis-cyan); transition: width 1s; }
-        #loader { transition: opacity 0.8s ease, visibility 0.8s; }
         .tab-btn.active { border-bottom: 2px solid var(--jarvis-cyan); color: white; }
     </style>
 </head>
@@ -26,10 +43,10 @@
     <header class="h-14 flex items-center justify-between px-6 border-b border-cyan-500/40 bg-black z-[1001]">
         <div class="flex items-center gap-3">
             <div class="w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_red]"></div>
-            <h1 class="text-[10px] font-black tracking-[0.4em] uppercase text-white">SENTINEL // v4.1</h1>
+            <h1 class="text-[10px] font-black tracking-[0.4em] uppercase text-white">SENTINEL // TACTICAL_GRID</h1>
         </div>
         <div class="flex gap-2">
-            <button onclick="toggleView('globe')" id="btn-globe" class="tab-btn active text-[9px] px-2 py-1 uppercase font-bold">Globe</button>
+            <button onclick="toggleView('map')" id="btn-map" class="tab-btn active text-[9px] px-2 py-1 uppercase font-bold">2D_Map</button>
             <button onclick="toggleView('grid')" id="btn-grid" class="tab-btn text-[9px] px-2 py-1 uppercase font-bold">Grid</button>
             <button onclick="toggleSidebar()" class="text-[9px] border border-cyan-500/40 px-2 py-1 uppercase font-bold">Intel</button>
         </div>
@@ -37,70 +54,78 @@
 
     <div class="flex-grow relative flex overflow-hidden">
         <aside id="intel-sidebar" class="w-72 h-full glass-ui border-r border-cyan-500/20 absolute left-0 z-[50] translate-x-[-100%] transition-transform duration-300 p-4 overflow-y-auto">
-            <h3 class="text-[10px] font-black border-b border-cyan-500/20 pb-2 mb-4">RISK_INDEX</h3>
+            <h3 class="text-[10px] font-black border-b border-cyan-500/20 pb-2 mb-4 tracking-widest">RISK_INDEX</h3>
             <div id="risk-list" class="space-y-4 mb-8"></div>
-            <h3 class="text-[10px] font-black border-b border-cyan-500/20 pb-2 mb-4">CORRELATION_ALERTS</h3>
-            <div class="text-[9px] space-y-2 opacity-70">
-                <p class="text-yellow-500">[!] NEWS SPIKE: ATHENS_SECTOR</p>
-                <p>[!] THERMAL ALERT: KYIV_SOUTH</p>
+            <h3 class="text-[10px] font-black border-b border-cyan-500/20 pb-2 mb-4 tracking-widest">SIGNAL_CORRELATION</h3>
+            <div class="text-[9px] space-y-3 opacity-70">
+                <p class="text-yellow-500">[!] CONVERGENCE: Athens Traffic Spiking</p>
+                <p class="text-red-500">[!] ALERT: Piraeus Port Thermal Shift</p>
+                <p>[!] Satellite Uplink: Active</p>
             </div>
         </aside>
 
         <main class="flex-grow relative bg-black">
-            <div id="globeViz"></div>
+            <div id="mapView"></div>
             <div id="videoGrid" class="hidden absolute inset-0 z-10 overflow-y-auto bg-black p-2">
                 <div class="grid-matrix" id="matrix-container"></div>
             </div>
 
             <div id="loader" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-[2000]">
                 <div class="w-10 h-10 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p class="text-[8px] tracking-[0.6em] animate-pulse">UPLINKING_SENTINEL_CORE...</p>
-                <button onclick="forceHideLoader()" class="mt-8 text-[8px] opacity-30 underline">FORCE_BYPASS</button>
+                <p class="text-[8px] tracking-[0.6em] animate-pulse">SYNCHRONIZING_GRID...</p>
             </div>
         </main>
     </div>
 
     <script>
-        let world = null;
+        let map;
         const videoIDs = ["iEpJwprxDdk", "YDvsBbKfLPA", "pykpO5kQJ98", "LuKwFajn37U", "9NyxcX3rhQs", "Ap-UM1O9RBU", "gCNeDWCI0vo"];
         const videoNames = ["Bloomberg", "Sky News", "Euronews", "DW News", "CNBC", "France24", "Al Jazeera"];
 
-        function initGlobe() {
-            try {
-                if (typeof Globe === 'undefined') throw new Error("Library not loaded");
-                world = Globe()
-                    (document.getElementById('globeViz'))
-                    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
-                    .backgroundColor('#050505')
-                    .showAtmosphere(true)
-                    .atmosphereColor('#06b6d4')
-                    .atmosphereDayLightOut(0.3)
-                    (document.getElementById('globeViz'));
-                
-                world.controls().autoRotate = true;
-                world.controls().autoRotateSpeed = 0.5;
-            } catch (e) {
-                console.error("Globe Error:", e);
-                document.getElementById('globeViz').innerHTML = '<div class="flex items-center justify-center h-full text-[10px] opacity-40 uppercase">3D_GLO_ERR: Use_Video_Grid</div>';
-            }
+        function initMap() {
+            map = L.map('mapView', { zoomControl: false, attributionControl: false }).setView([37.9, 23.7], 3);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add Pulsing Intel Dots
+            const hotspots = [
+                { lat: 37.9838, lon: 23.7275, name: "ATHENS_NODE_01" },
+                { lat: 31.7683, lon: 35.2137, name: "JERUSALEM_SECTOR" },
+                { lat: 40.7128, lon: -74.0060, name: "NYC_TERMINAL" },
+                { lat: 50.4501, lon: 30.5234, name: "KYIV_DATA_POINT" }
+            ];
+
+            hotspots.forEach(pt => {
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: "<div class='pulsing-dot'></div>",
+                    iconSize: [10, 10],
+                    iconAnchor: [5, 5]
+                });
+                L.marker([pt.lat, pt.lon], { icon: icon }).addTo(map)
+                 .bindTooltip(`<span class="text-[9px] font-mono text-cyan-400 bg-black p-1 border border-cyan-500">${pt.name}</span>`, { sticky: true });
+            });
         }
 
         function toggleView(view) {
-            const globe = document.getElementById('globeViz');
+            const mapView = document.getElementById('mapView');
             const grid = document.getElementById('videoGrid');
-            const bGlobe = document.getElementById('btn-globe');
+            const bMap = document.getElementById('btn-map');
             const bGrid = document.getElementById('btn-grid');
 
-            if (view === 'globe') {
-                globe.classList.remove('hidden');
+            if (view === 'map') {
+                mapView.classList.remove('hidden');
                 grid.classList.add('hidden');
-                bGlobe.classList.add('active');
+                bMap.classList.add('active');
                 bGrid.classList.remove('active');
+                map.invalidateSize(); // Refreshes Leaflet
             } else {
-                globe.classList.add('hidden');
+                mapView.classList.add('hidden');
                 grid.classList.remove('hidden');
                 bGrid.classList.add('active');
-                bGlobe.classList.remove('active');
+                bMap.classList.remove('active');
                 loadVideoGrid();
             }
         }
@@ -111,8 +136,8 @@
             videoIDs.forEach((id, i) => {
                 container.innerHTML += `
                     <div class="video-box">
-                        <div class="absolute top-1 left-1 bg-black/80 px-1 text-[7px] z-10 border border-cyan-500/30">${videoNames[i]}</div>
-                        <iframe src="https://www.youtube.com/embed/${id}?autoplay=0&mute=1&modestbranding=1" allow="fullscreen"></iframe>
+                        <div class="absolute top-1 left-1 bg-black/80 px-1 text-[7px] z-10 border border-cyan-500/30 uppercase font-bold text-white">${videoNames[i]}</div>
+                        <iframe src="https://www.youtube.com/embed/${id}?autoplay=0&mute=1&modestbranding=1" allowfullscreen></iframe>
                     </div>`;
             });
         }
@@ -122,9 +147,9 @@
             const regions = ["GREECE", "ISRAEL", "USA", "UKRAINE", "TAIWAN"];
             list.innerHTML = '';
             regions.forEach(r => {
-                const score = Math.floor(Math.random() * 80) + 10;
+                const score = Math.floor(Math.random() * 85) + 5;
                 list.innerHTML += `
-                    <div class="text-[9px] mb-2 font-bold uppercase flex justify-between"><span>${r}</span><span>${score}%</span></div>
+                    <div class="text-[9px] mb-1 font-bold flex justify-between"><span>${r}</span><span>${score}%</span></div>
                     <div class="risk-bar mb-3"><div class="risk-fill" style="width:${score}%"></div></div>
                 `;
             });
@@ -135,17 +160,14 @@
             sb.style.transform = sb.style.transform === 'translateX(0%)' ? 'translateX(-100%)' : 'translateX(0%)';
         }
 
-        function forceHideLoader() {
-            const loader = document.getElementById('loader');
-            loader.style.opacity = '0';
-            setTimeout(() => { loader.style.visibility = 'hidden'; }, 800);
-        }
-
         window.onload = () => {
-            initGlobe();
+            initMap();
             updateRisk();
-            // Fail-safe: Hide loader even if scripts hang
-            setTimeout(forceHideLoader, 3500);
+            setInterval(updateRisk, 15000);
+            setTimeout(() => { 
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
+            }, 2500);
         };
     </script>
 </body>
